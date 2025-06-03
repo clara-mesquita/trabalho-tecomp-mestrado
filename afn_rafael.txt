@@ -1,0 +1,9 @@
+#oioioi
+Q: A, QF, S
+Σ: a, b
+δ:
+A, b -> S
+S, a -> A
+S, ε -> QF
+S: inicial
+F: QF
