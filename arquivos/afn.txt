@@ -1,0 +1,6 @@
+# AFN Original
+Q: qf, D, A
+∑: c, a, b
+δ:
+D, a -> AD, ε -> qfA, b -> DD: inicial
+F: qf

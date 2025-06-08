@@ -1,6 +1,6 @@
 # AFN com λ-transição
 Q: q0, q1, q2
-∑ : a, b, c
+Σ: a, b, c
 δ:
 q0, a -> q0
 q0, a -> q1

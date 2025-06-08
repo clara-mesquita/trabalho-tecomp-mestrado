@@ -1,0 +1,6 @@
+# Gramática: G = ({S, A, B}, {w}, P, S)
+
+A -> ε 
+A -> w
+A -> B 
+A -> wB 

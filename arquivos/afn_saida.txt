@@ -1,5 +1,5 @@
 # AFN Original
-Q: Z, S, A
+Q: S, A, Z
 ∑: a, b
 δ:
 S, a -> A

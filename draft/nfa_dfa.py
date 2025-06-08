@@ -242,7 +242,7 @@ def nfa_to_dfa(nfa_table, initial_state, final_states):
 # ─────────────── Exemplo de uso ───────────────
 
 if __name__ == "__main__":
-    file_path = "afn_rafael.txt"  # Caminho para o seu arquivo
+    file_path = "./inputs/afn_rafael.txt"  # Caminho para o seu arquivo
 
     # 1) Parse do AFN-λ:
     nfa_table, states, alphabet, initial_state, final_states = parse_afn(file_path)
