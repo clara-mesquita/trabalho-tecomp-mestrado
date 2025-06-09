@@ -152,6 +152,7 @@ def converter_afn_afd(alfabeto, inicio_afd, estados_finais, afn):
     estados_afd = [inicio_afd]      
     transicoes_afd = defaultdict(lambda: defaultdict(set))
     finais_afd = set()
+    dead_state = frozenset()
 
     idx = 0
     while idx < len(estados_afd):
@@ -177,6 +178,14 @@ def converter_afn_afd(alfabeto, inicio_afd, estados_finais, afn):
                     estados_afd.append(target)
 
         idx += 1  # passa para o próximo subconjunto na lista
+    
+    # Ensure dead state exists in DFA states
+    if dead_state not in estados_afd:
+        estados_afd.append(dead_state)
+
+        # Add self-transitions for dead state
+    for a in alfabeto:
+        transicoes_afd[dead_state][a] = dead_state
 
     print("\n--- AFD DETERMINIZADO ---")
     print("Estados AFD:", estados_afd)
