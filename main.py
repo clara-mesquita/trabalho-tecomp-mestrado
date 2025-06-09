@@ -4,16 +4,16 @@ from conversores.afn_afd import converter_afn
 from conversores.fecho import aplicar_reverso_complemento_afd
 
 def main():
-    if len(sys.argv) < 4:
-        print("Erro: algum dos 3 argumentos não foi fornecido: <operacao> <arquivo_entrada.txt> <cadeia>")
+    if len(sys.argv) < 5:
+        print("Erro: algum dos 4 argumentos não foi fornecido: <operacao> <arquivo_entrada.txt> <cadeia>")
         sys.exit(1)
 
     operacao = sys.argv[1] 
     arquivo_entrada = sys.argv[2]
+    arquivo_saida = sys.argv[3]
 
     if (operacao == 'glud'):
-        converter_glud(arquivo_entrada)
-    
+        converter_glud(arquivo_entrada, arquivo_saida)
 
     if (operacao == 'afn'):
         converter_afn(arquivo_entrada)
