@@ -1,7 +1,6 @@
 
 from collections import defaultdict
 
-
 def extrair_afn_arquivo(caminho_arquivo):
     """
     Essa função extrai informações do arquivo no formato:
@@ -35,7 +34,7 @@ def extrair_afn_arquivo(caminho_arquivo):
             estados = {s.strip() for s in linha.split(":", 1)[1].split(",")}
             continue
 
-        if linha.startswith("Σ:"):
+        if linha.startswith(('Σ:', '∑:', 'S:')):
             alfabeto = {s.strip() for s in linha.split(":", 1)[1].split(",")}
             continue
 
@@ -210,7 +209,7 @@ def salvar_afd_arquivo(estados, alfabeto, transicoes, estado_ini, estados_fin, c
             origem_str = '{' + ', '.join(sorted(origem)) + '}'
             for simbolo, destino in mapa.items():
                 destino_str = '{' + ', '.join(sorted(destino)) + '}'
-                f.write(f"  {origem_str}, {simbolo} -> {destino_str}\n")
+                f.write(f"{origem_str}, {simbolo} -> {destino_str}\n")
 
         estado_ini_str = '{' + ', '.join(sorted(estado_ini)) + '}'
         f.write(f"{estado_ini_str}: inicial\n")
