@@ -16,7 +16,7 @@ def main():
         converter_glud(arquivo_entrada, arquivo_saida)
 
     if (operacao == 'afn'):
-        converter_afn(arquivo_entrada)
+        converter_afn(arquivo_entrada, arquivo_saida)
 
     if (operacao == 'afd'):
         cadeia = sys.argv[3]

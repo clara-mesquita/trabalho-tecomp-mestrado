@@ -134,7 +134,7 @@ def salvar_afn_arquivo(estados, alfabeto, transicoes, estado_ini, estado_fin, ca
     Função para armazenar o AFN em um arquivo txt no formato:
     `# AFN Original
     Q: {conjunto de estados}
-    ∑: {conjunto com alfabeto}
+    Σ: {conjunto com alfabeto}
     δ: {transições de estados depois de conversão de produções}
     {estado inicial}: inicial
     F: {estado final}`
@@ -143,7 +143,7 @@ def salvar_afn_arquivo(estados, alfabeto, transicoes, estado_ini, estado_fin, ca
     with open(caminho_afn, 'w', encoding='utf-8') as f:
         f.write("# AFN Original\n")
         f.write(f"Q: {', '.join(estados)}\n")
-        f.write(f"∑: {', '.join(alfabeto)}\n")
+        f.write(f"Σ: {', '.join(alfabeto)}\n")
         f.write("δ:\n")
         for esq, mapa in transicoes.items():
             for simbolo, destinos in mapa.items():
@@ -167,7 +167,7 @@ def converter_glud(caminho_arquivo, nome_arquivo):
     estados, transicoes, estado_ini, estado_fin = converter_glud_afn(estado_ini, nao_terminais, producoes)
     print("\n--- AFND GERADO ---")
     print(f"Q: {', '.join(estados)}")
-    print(f"∑: {', '.join(alfabeto)}")
+    print(f"Σ: {', '.join(alfabeto)}")
     print("δ:")
     for esq, mapa in transicoes.items():
         for simbolo, destinos in mapa.items():

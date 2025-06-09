@@ -3,13 +3,13 @@ from collections import defaultdict
 
 def extrair_afn_arquivo(caminho_arquivo):
     """
-    Essa função extrai informações do arquivo no formato:
-    # AFN Original 
-    Q: {conjunto_estados}
-    ∑: {conjunto_alfabeto}
-    δ: {transicoes}
-    {estado_inicial}: inicial
-    F: {conjunto_estados_finais}
+    Extrai informações do arquivo com AFND no formato:
+    `# AFN Original 
+    Q: {conjunto de estados}
+    Σ: {conjunto com alfabeto}
+    δ: {transições de estados depois de conversão de produções}
+    {estado inicial}: inicial
+    F: {estado final}`
     """
 
     linhas_arquivo = []
@@ -34,7 +34,7 @@ def extrair_afn_arquivo(caminho_arquivo):
             estados = {s.strip() for s in linha.split(":", 1)[1].split(",")}
             continue
 
-        if linha.startswith(('Σ:', '∑:', 'S:')):
+        if linha.startswith(('Σ:', '∑:', 'P:')):
             alfabeto = {s.strip() for s in linha.split(":", 1)[1].split(",")}
             continue
 
@@ -59,117 +59,95 @@ def extrair_afn_arquivo(caminho_arquivo):
             estados_finais = {s.strip() for s in linha.split(":", 1)[1].split(",")}
             continue
 
-    print("\n--- AFN COM EPSILON ORIGINAL ---")
-    print("Estados:", estados)
-    print("Alfabeto:", alfabeto)
-    print("Estado inicial:", estado_inicial)
-    print("Estados finais:", estados_finais)
-    print("Transições AFN ε:")
-    for origem, destinos in afn_epslon.items():
-        print(f"  {origem} -> {dict(destinos)}")
-
     return estados, alfabeto, estado_inicial, estados_finais, afn_epslon
 
-def calcular_afn_fecho(estados, afn_epslon):    
+def calcular_afn_fecho(estados, afn_epslon, alfabeto): 
+    """
+    Função para calcular o fecho(ε) dos estados 
+    e adicionar ao AFND para que o ε possa ser removido
+
+    fecho[q] é o conjunto de todos os estados alcançáveis a partir de q usando apenas transições ε (incluindo q)
+    """       
+
+    # Percorre todos os estados
     for estado in estados:
         fecho = {estado}
         changed = True
 
+        # EEncontrarmos novos estados via ε
         while changed:
             changed = False
+            # Itera sobre a cópia dos estados já no fecho
             for q in list(fecho):
+                # Para cada destino alcançável por ε a partir de q
                 for r in afn_epslon[q].get("ε", []):
                     if r not in fecho:
                         fecho.add(r)
                         changed = True
 
-        afn_epslon[estado]["fecho"] = fecho
-
-    print("\n--- AFN COM FECHO-ε CALCULADO ---")
-
-    for origem, mapa in afn_epslon.items():
-            origem_str = '{' + ', '.join(sorted(origem)) + '}'
-            for simbolo, destino in mapa.items():
-                destino_str = '{' + ', '.join(sorted(destino)) + '}'
-                print(f"{origem_str}, {simbolo} -> {destino_str}")
-               
+        afn_epslon[estado]["fecho"] = fecho               
     
-    return afn_epslon
+    alfabeto.discard("ε") # Agora as operações com alfabeto não vão considerar mais o ε
+    return afn_epslon, alfabeto
 
-def remover_transicao_vazia(estados, alfabeto, afn_epslon):
+def remover_transicao_vazia(estados, alfabeto_sem_epslon, estado_inicial, afn_epslon):
     """
     Essa função remove as transições ε de um AFND.
-
-    O returno é um novo dict afn sem qualquer transição ε, mas que aceita 
-    exatamente a mesma linguagem, porque toda a lógica  dos saltos vazios 
-    foi incorporada nas transições sobre símbolos concretos.
     """
 
     # Capturar fechos(ε) pré-computados
-    # fechos[q] é o conjunto de todos os estados alcançáveis a partir de q usando apenas transições ε (incluindo q)
-    fechos = {q: set(afn_epslon[q].get("fecho", [q])) for q in estados}
+    fechamento = {q: set(afn_epslon[q].get("fecho", [q])) for q in estados}
 
-    """
-    Para cada símbolo a do alfabeto (exceto ε):
-    - Junta, em um conjunto auxiliar `estados_unificados`, todos os destinos 
-        que podem ser alcançados assim:
-        a) de cada estado r em fechos[q],
-        b) via uma transição r —a→ s,
-        c) seguido de todas as transições-ε a partir de s (ou seja, fechos[s]).
-    - Isso equivale a “pulverizar” a transitividade do ε:
-        q —ε*→ r —a→ s —ε*→ t  torna-se  q —a→ t diretamente.
-        Se `estados_unificados` não estiver vazio, adiciona essa transição 
-    consolidada em `afn[ q ][ a ] = estados_unificados`.
-    """
     afn = defaultdict(lambda: defaultdict(set))
+
     for p in estados:
-        for a in alfabeto:
-            dest_uni = set()
-            for r in fechos[p]:
+        # Para cada símbolo a do alfabeto sem ε:
+        for a in alfabeto_sem_epslon:
+            # Junta todos os destinos que podem ser alcançados de cada estado r em fechamento[q], via uma transição r —a→ s,
+            # seguido de todas as transições-ε a partir de s.
+            dest_uni = frozenset()  # Utilizando frozenset pois é um set que mantem a mesma ordem e é hashable
+            for r in fechamento[p]:
                 for s in afn_epslon.get(r, {}).get(a, []):
-                    dest_uni |= fechos[s]
+                    dest_uni |= fechamento[s]
             if dest_uni:
                 afn[p][a] = dest_uni
             else:
                 afn[p][a] = afn_epslon[p][a]
 
-    print("\n--- AFN APÓS REMOÇÃO DE ε  ---")
-    for origem, mapa in afn.items():
-            origem_str = '{' + ', '.join(sorted(origem)) + '}'
-            for simbolo, destino in mapa.items():
-                destino_str = '{' + ', '.join(sorted(destino)) + '}'
-                print(f"{origem_str}, {simbolo} -> {destino_str}")
-
-    return afn
+    inicio_afd = frozenset(afn_epslon[estado_inicial].get("fecho", {estado_inicial}))
+    return afn, inicio_afd
 
 def converter_afn_afd(alfabeto, inicio_afd, estados_finais, afn):
     """
-    Essa função faz a conversão do NFA sem transições vazias no DFA com construção de subconjuntos
+    Essa função faz a conversão do NFA sem transições vazias no DFA 
     """
 
     # O estado inicial do AFD é o conjunto dos subconjuntos iniciais do AFN (ou seja, o fecho(estado_inicial))
-    # Utilizando frozenset pois é um set que mantem a mesma ordem
     estados_afd = [inicio_afd]      
     transicoes_afd = defaultdict(lambda: defaultdict(set))
     finais_afd = set()
-    dead_state = frozenset()
+
+    print(f"\n>> Estado inicial do AFD: {set(inicio_afd)}\n")
 
     idx = 0
+    # Para cada estado do AFD 
     while idx < len(estados_afd):
         estado_atual = estados_afd[idx]
 
-        # Marcar como final se qualquer q ∈ estado_atual for final no NFA
+        # Mantem o mesmo final do AFND
         if any(q in estados_finais for q in estado_atual):
             finais_afd.add(estado_atual)
 
-        # Para cada símbolo, calcular o subconjunto destino
+        # Para cada símbolo do alfabeto, calcula o destino
         for a in alfabeto:
             target = set()
+            # Une todos os destinos de cada q ∈ estado_atual via a
             for q in estado_atual:
                 target |= afn.get(q, {}).get(a, set())
             target = frozenset(target)
 
             transicoes_afd[estado_atual][a] = target
+            print(f"  δ({set(estado_atual)}, '{a}') = {set(target)}")
 
             # Se for um subconjunto novo, adiciona à lista
             if target:
@@ -177,30 +155,12 @@ def converter_afn_afd(alfabeto, inicio_afd, estados_finais, afn):
                 if target not in estados_afd:
                     estados_afd.append(target)
 
-        idx += 1  # passa para o próximo subconjunto na lista
-    
-    # Ensure dead state exists in DFA states
-    if dead_state not in estados_afd:
-        estados_afd.append(dead_state)
-
-        # Add self-transitions for dead state
-    for a in alfabeto:
-        transicoes_afd[dead_state][a] = dead_state
-
-    print("\n--- AFD DETERMINIZADO ---")
-    print("Estados AFD:", estados_afd)
-    print("Estado inicial AFD:", inicio_afd)
-    print("Estados finais AFD:", finais_afd)
-    print("Transições AFD:")
-    for origem, mapa in transicoes_afd.items():
-            origem_str = '{' + ', '.join(sorted(origem)) + '}'
-            for simbolo, destino in mapa.items():
-                destino_str = '{' + ', '.join(sorted(destino)) + '}'
-                print(f"{origem_str}, {simbolo} -> {destino_str}")
+        print("") 
+        idx += 1  
 
     return estados_afd, inicio_afd, finais_afd, transicoes_afd
 
-def salvar_afd_arquivo(estados, alfabeto, transicoes, estado_ini, estados_fin, caminho_afd='./arquivos/afd.txt'):
+def salvar_afd_arquivo(estados, alfabeto, transicoes, estado_ini, estados_fin, caminho_afd):
     """
     Salva o AFD corretamente formatado no arquivo.
     """
@@ -227,18 +187,63 @@ def salvar_afd_arquivo(estados, alfabeto, transicoes, estado_ini, estados_fin, c
         estados_fin_str = ', '.join(['{' + ', '.join(sorted(e)) + '}' for e in estados_fin])
         f.write(f"F: {estados_fin_str}\n")
 
-
-def converter_afn(caminho_arquivo):
-    # nfa epslon -> nfa fecho -> nfa -> dfa
+def converter_afn(caminho_arquivo, nome_arquivo):
+    # afn epslon (original) -> afn fecho -> afn -> afd
     estados, alfabeto, estado_inicial, estados_finais, afn_epslon = extrair_afn_arquivo(caminho_arquivo)
-    print("alfabeto")
-    print(alfabeto)
-    alfabeto.discard("ε")
-    afn_fecho = calcular_afn_fecho(estados, afn_epslon)
-    afn = remover_transicao_vazia(estados, alfabeto, afn_fecho)
+    print("\n--- AFND-ε ORIGINAL ---")
+    print("Q:", estados)
+    print("Σ:", alfabeto)
+    print("Estado inicial:", estado_inicial)
+    print("Estados finais:", estados_finais)
+    print("Transições AFND-ε:")
+    for origem, destinos in afn_epslon.items():
+        print(f"  {origem} -> {dict(destinos)}")
+    
+      
+    afn_fecho, alfabeto = calcular_afn_fecho(estados, afn_epslon, alfabeto)
+    print("\n--- AFND FECHO (ε) ---")
+    simbolos = sorted({s for mapa in afn_epslon.values() for s in mapa.keys() if s != 'fecho'})
+    header = ['Estado'] + simbolos + ['fecho']
+    print('\t'.join(f"{h:^12}" for h in header))
+    for estado in sorted(estados):
+        row = [f"{estado:^12}"]
+        mapa = afn_epslon.get(estado, {})
+        for simb in simbolos:
+            dest = mapa.get(simb, set())
+            row.append(f"{{{', '.join(sorted(dest))}}}".center(12))
+        fecho = mapa.get('fecho', set())
+        row.append(f"{{{', '.join(sorted(fecho))}}}".center(12))
+        print('\t'.join(row))
 
-    inicio_afd = frozenset(afn_epslon[estado_inicial].get("fecho", {estado_inicial}))
+    afn, inicio_afd = remover_transicao_vazia(estados, alfabeto, estado_inicial, afn_fecho)
+    print("\n--- AFND SEM TRANSIÇÕES-ε ---")
+    simbolos = sorted({s for mapa in afn.values() for s in mapa.keys() if s != 'fecho'})
+    header = ['Estado'] + simbolos 
+    print('\t'.join(f"{h:^12}" for h in header))
+    for estado in sorted(estados):
+        row = [f"{estado:^12}"]
+        mapa = afn.get(estado, {})
+        for simb in simbolos:
+            dest = mapa.get(simb, set())
+            row.append(f"{{{', '.join(sorted(dest))}}}".center(12))
+        print('\t'.join(row))
+
     estados_afd, inicio_afd, finais_afd, transicoes_afd = converter_afn_afd(alfabeto, inicio_afd, estados_finais, afn)
+    print("\n--- AFD SEM TRANSIÇÕES-ε ---")
+    simbolos = sorted({s for mapa in afn.values() for s in mapa.keys() if s != 'fecho'})
+    header = ['Estado'] + simbolos 
+    print('\t'.join(f"{h:^12}" for h in header))
+    for estado in sorted(estados_afd, key=lambda fs: sorted(fs)):
+        estado_str = '{' + ', '.join(sorted(estado)) + '}'
+        row = [f"{estado_str:^12}"]
 
-    salvar_afd_arquivo(estados_afd, alfabeto, transicoes_afd, inicio_afd, finais_afd)
+        mapa = transicoes_afd.get(estado, {})
+        for simb in simbolos:
+            dest = mapa.get(simb, set())
+            dest_str = '{' + ', '.join(sorted(dest)) + '}'
+            row.append(f"{dest_str:^12}")
+        print('\t'.join(row))
 
+    caminho_saida = f'./arquivos/saida/{nome_arquivo}'
+    salvar_afd_arquivo(estados_afd, alfabeto, transicoes_afd, inicio_afd, finais_afd, caminho_saida)
+    print(f"\nArquivo salvo em {caminho_saida}")
