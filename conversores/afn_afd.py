@@ -162,7 +162,13 @@ def converter_afn_afd(alfabeto, inicio_afd, estados_finais, afn):
 
 def salvar_afd_arquivo(estados, alfabeto, transicoes, estado_ini, estados_fin, caminho_afd):
     """
-    Salva o AFD corretamente formatado no arquivo.
+    Salva o AFD corretamente formatado no arquivo. Formato:
+    `# AFD Determinizado
+    Q: {conjunto de estados}
+    Σ: {conjunto com alfabeto}
+    δ: {transições de estados depois de conversão de produções}
+    {estado inicial}: inicial
+    F: {estado final}`
     """
     with open(caminho_afd, 'w', encoding='utf-8') as f:
         f.write("# AFD Determinizado\n")

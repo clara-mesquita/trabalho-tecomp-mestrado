@@ -1,18 +1,12 @@
-# AFD Determinizado
-Q: {q0}, {q0, q1, q2}, {q1}, {q1, q2}
-∑: a, b, c
+# AFN DETERMINIZADO
+Q: {A}, {QF_S}, {}
+∑: a, b
 δ:
-  {q0}, b -> {}
-  {q0}, c -> {}
-  {q0}, a -> {q0, q1, q2}
-  {q0, q1, q2}, b -> {q1}
-  {q0, q1, q2}, c -> {q1, q2}
-  {q0, q1, q2}, a -> {q0, q1, q2}
-  {q1}, b -> {q1}
-  {q1}, c -> {}
-  {q1}, a -> {}
-  {q1, q2}, b -> {q1}
-  {q1, q2}, c -> {q1, q2}
-  {q1, q2}, a -> {}
-{q0}: inicial
-F: {q0, q1, q2}, {q1, q2}, {q1}
+{A}, a -> {}
+{A}, b -> {QF_S}
+{QF_S}, a -> {A}
+{QF_S}, b -> {}
+{}, a -> {}
+{}, b -> {}
+{QF_S}: inicial
+F: {{QF_S}}

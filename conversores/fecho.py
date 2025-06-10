@@ -21,6 +21,9 @@ def remover_caracteres_extra(s):
     return elementos
 
 def extrair_afn_arquivo(caminho_arquivo):
+    """
+    Lê um AFD  de arquivo, garantindo totalidade das transições.
+    """
     estados = set()
     alfabeto = set()
     transicoes = defaultdict(lambda: defaultdict(set))
@@ -37,14 +40,18 @@ def extrair_afn_arquivo(caminho_arquivo):
             for item in remover_caracteres_extra(rhs):
                 estados.add(item)
             continue
-        if linha.startswith("Σ") or linha.startswith("S"):
+
+        if linha.startswith("Σ") or linha.startswith('∑:'):
             linha_trans = linha.split(":", 1)[1].strip()
             for simb in [tok.strip() for tok in linha_trans.split(",")]:
                 alfabeto.add(simb)
             continue
+
         if linha.startswith("Δ:") or linha.startswith("δ:"):
             lendo_trans = True
             continue
+        
+         # transição p, a -> q
         if lendo_trans and "->" in linha:
             esquerda, direita = linha.split("->", 1)
             esquerda = esquerda.strip()
@@ -52,6 +59,7 @@ def extrair_afn_arquivo(caminho_arquivo):
             estado, simbolo = remover_caracteres_extra(esquerda)
             transicoes[estado][simbolo].add(direita)
             continue
+        
         if "inicial" in linha:
             state_str = linha.split(":", 1)[0].strip()
             inicial_raw = state_str
