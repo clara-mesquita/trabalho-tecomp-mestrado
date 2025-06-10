@@ -1,0 +1,12 @@
+# AFD Determinizado
+Q: {D, qf}, {A}
+∑: a, b, c
+δ:
+{D, qf}, c -> {}
+{D, qf}, b -> {}
+{D, qf}, a -> {A}
+{A}, c -> {}
+{A}, b -> {D, qf}
+{A}, a -> {}
+{D, qf}: inicial
+F: {D, qf}

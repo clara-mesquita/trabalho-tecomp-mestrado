@@ -164,34 +164,53 @@ def elimina_nao_alcancaveis(transicoes, start):
         alcancaveis = novo
     return alcancaveis
 
-def salvar_automato_arquivo(estados, alfabeto, transicoes, estado_ini, estados_fin, caminho):
+def salvar_automato_arquivo(estados, alfabeto, transicoes,
+                           estado_ini, estados_fin, caminho):
     """
-    Salva o AFD corretamente formatado no arquivo. Formato:
-    `# AFD Determinizado
-    Q: {conjunto de estados}
-    Σ: {conjunto com alfabeto}
-    δ: {transições de estados depois de conversão de produções}
-    {estado inicial}: inicial
-    F: {estado final}`
+    Salva um AFD/AFN no arquivo. Se houver só um estado inicial
+    (DFA), imprime "{q}: inicial". Se houver vários (AFN), imprime
+    "Iniciais: {q}, {r}, ...".
     """
+    trap = frozenset({'TRAP'})
     with open(caminho, 'w', encoding='utf-8') as f:
-        estados_str = ', '.join(['{' + ', '.join(sorted(e)) + '}' for e in estados])
+        # — Q:
+        clean_states = [e for e in estados if e != trap]
+        estados_str = ', '.join('{' + ', '.join(sorted(e)) + '}' 
+                                for e in clean_states)
         f.write(f"Q: {estados_str}\n")
 
+        # — Σ:
         alfabeto_str = ', '.join(sorted(alfabeto))
         f.write(f"∑: {alfabeto_str}\n")
 
+        # — δ:
         f.write("δ:")
         for o, mapa in transicoes.items():
+            if o == trap:
+                continue
             for s, dests in mapa.items():
                 for d in dests:
-                    f.write(f"\n  {formatar_estado(o)}, s -> {formatar_estado(d)}")
+                    if d == trap:
+                        continue
+                    f.write(f"\n  {formatar_estado(o)}, {s} -> {formatar_estado(d)}")
 
-        estado_ini_str = ', '.join(['{' + ', '.join(sorted(e)) + '}' for e in estado_ini])
-        f.write(f"\n{estado_ini_str}: inicial\n")
+        # — estados iniciais
+        # detecta se veio um conjunto de estados ou só um estado
+        if isinstance(estado_ini, (set, frozenset)) and \
+           any(isinstance(x, (set, frozenset)) for x in estado_ini):
+            # vários iniciais (AFN reverso)
+            iniciais = sorted(estado_ini, key=lambda s: sorted(s))
+            inic_str = ', '.join(formatar_estado(s) for s in iniciais)
+            f.write(f"\nIniciais: {inic_str}\n")
+        else:
+            # um único inicial (DFA)
+            f.write(f"\n{formatar_estado(estado_ini)}: inicial\n")
 
-        estados_fin_str = ', '.join(['{' + ', '.join(sorted(e)) + '}' for e in estados_fin])
-        f.write(f"F: {estados_fin_str}\n")
+        # — Finais (sem trap)
+        finals_clean = [e for e in estados_fin if e != trap]
+        fin_str = ', '.join('{' + ', '.join(sorted(e)) + '}' 
+                            for e in finals_clean)
+        f.write(f"F: {fin_str}\n")
 
 def aplicar_reverso_complemento_afd(caminho_afd, arquivo_comp, arquivo_rev, cadeia):
     estados, alfabeto, transicoes, inicial, finais = ler_afd(caminho_afd)
@@ -244,7 +263,9 @@ def aplicar_reverso_complemento_afd(caminho_afd, arquivo_comp, arquivo_rev, cade
     resp_rev = verificar_cadeia_afn(cadeia, alfabeto, trans_rev, iniciais_rev, finais_rev)
     print("ACEITA" if resp_rev else "REJEITA")
 
-    salvar_automato_arquivo(estados, alfabeto, transicoes, inicial_comp, finais_comp, arquivo_comp)
-    salvar_automato_arquivo(estados, alfabeto, transicoes, iniciais_rev, finais_rev, arquivo_rev)
-    print(f"\nArquivos salvos em ./arquivos/saida/{arquivo_comp} e ./arquivos/saida/{arquivo_rev}")
+    caminho_comp = f"./arquivos/saida/{arquivo_comp}"
+    caminho_rev = f"./arquivos/saida/{arquivo_rev}"
+    salvar_automato_arquivo(estados, alfabeto, transicoes, inicial_comp, finais_comp, caminho_comp)
+    salvar_automato_arquivo(estados, alfabeto, transicoes, iniciais_rev, finais_rev, caminho_rev)
+    print(f"\nArquivos salvos em {caminho_comp} e {caminho_rev}")
 

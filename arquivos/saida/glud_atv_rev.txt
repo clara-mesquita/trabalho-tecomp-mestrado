@@ -1,0 +1,11 @@
+Q: {D, qf}, {A}
+∑: a, b, c
+δ:
+  {D, qf}, c -> {}
+  {D, qf}, b -> {}
+  {D, qf}, a -> {A}
+  {A}, c -> {}
+  {A}, b -> {D, qf}
+  {A}, a -> {}
+Iniciais: {D, qf}
+F: {D, qf}
