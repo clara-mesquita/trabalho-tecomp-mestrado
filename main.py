@@ -1,26 +1,36 @@
+#!/usr/bin/env python3
 import sys
 from conversores.glud_afn import converter_glud
 from conversores.afn_afd import converter_afn
 from conversores.rev_comp import aplicar_reverso_complemento_afd
 
+USO = """
+Uso:
+  script.py glud <entrada> <saida>
+  script.py afn  <entrada> <saida>
+  script.py afd  <entrada> <saida_complemento> <saida_reverso> <cadeia>
+"""
+
 def main():
-    # if len(sys.argv) < 5:
-    #     print("Erro: algum dos 4 argumentos não foi fornecido: <operacao> <arquivo_entrada.txt> <cadeia>")
-    #     sys.exit(1)
+    args = sys.argv[1:]
+    if not args:
+        print(USO)
+        sys.exit(1)
 
-    operacao = sys.argv[1] 
-    arquivo_entrada = sys.argv[2]
-    arquivo_saida = sys.argv[3]
+    operacao = args[0]
 
-    if (operacao == 'glud'):
-        converter_glud(arquivo_entrada, arquivo_saida)
+    if operacao == 'glud':
+        _, entrada, saida = args
+        converter_glud(entrada, saida)
 
-    if (operacao == 'afn'):
-        converter_afn(arquivo_entrada, arquivo_saida)
+    elif operacao == 'afn':
+        sys.exit(1)
+        _, entrada, saida = args
+        converter_afn(entrada, saida)
 
-    if (operacao == 'afd'):
-        cadeia = sys.argv[3]
-        aplicar_reverso_complemento_afd(arquivo_entrada, cadeia)
-        
+    elif operacao == 'afd':
+        _, entrada, comp, rev, cadeia = args
+        aplicar_reverso_complemento_afd(entrada, comp, rev, cadeia)
+
 if __name__ == "__main__":
     main()

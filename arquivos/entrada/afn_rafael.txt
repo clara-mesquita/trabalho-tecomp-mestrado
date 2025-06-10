@@ -1,9 +1,9 @@
-#oioioi
+# AFND
 Q: A, QF, S
 Σ: a, b
-δ:
+Δ:
 A, b -> S
 S, a -> A
 S, ε -> QF
-S: inicial
-F: QF
+q0: S
+F: {QF}

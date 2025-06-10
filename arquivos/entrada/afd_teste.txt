@@ -1,4 +1,4 @@
-# AFN DETERMINIZADO
+# AFD DETERMINIZADO
 Q: {A}, {QF_S}, {}
 ∑: a, b
 δ:

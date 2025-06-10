@@ -1,0 +1,8 @@
+# AFD Determinizado
+Q: {D}
+∑: a, b
+δ:
+{D}, a -> {}
+{D}, b -> {}
+{D}: inicial
+F: 

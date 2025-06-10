@@ -1,0 +1,5 @@
+# Gramática: G = ({S, A, B}, {a, b}, P, D)
+
+S -> aA | bB | ε
+A -> aA | bB | a
+B -> bB | a

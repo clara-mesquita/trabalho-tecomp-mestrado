@@ -1,6 +1,26 @@
 import re
 from collections import defaultdict
 
+def expandir_producoes_glud(linhas):
+    """
+    Recebe uma lista de strings no formato 'A -> x | yB | ε'
+    e retorna outra lista com cada alternativa isolada: ['A -> x', 'A -> yB', 'A -> ε']
+    """
+    expandidas = []
+    for linha in linhas:
+        # separa lado esquerdo e direito
+        if '->' not in linha:
+            continue
+        esq, dir_raw = linha.split('->', 1)
+        esq = esq.strip()
+        # para cada alternativa separada por '|'
+        for alt in dir_raw.split('|'):
+            alt = alt.strip()
+            if alt:
+                expandidas.append(f"{esq} -> {alt}")
+    return expandidas
+
+
 def extrair_glud_arquivo(caminho_arquivo):
     """
     Lê arquivo da gramática de entrada no formato:
@@ -148,12 +168,15 @@ def salvar_afn_arquivo(estados, alfabeto, transicoes, estado_ini, estado_fin, ca
         for esq, mapa in transicoes.items():
             for simbolo, destinos in mapa.items():
                 for dest in destinos:
-                    f.write(f"{esq}, {simbolo} -> {dest}\n")
+                    f.write(f" {esq}, {simbolo} -> {dest}\n")
         f.write(f"{estado_ini}: inicial\n")
         f.write(f"F: {estado_fin}\n")
 
 def converter_glud(caminho_arquivo, nome_arquivo):
     estado_ini, nao_terminais, alfabeto, producoes_arquivo = extrair_glud_arquivo(caminho_arquivo)
+
+    producoes_arquivo = expandir_producoes_glud(producoes_arquivo)
+    producoes = extrair_producoes(producoes_arquivo)
 
     producoes = extrair_producoes(producoes_arquivo)
     print("\n--- GLUD ---")

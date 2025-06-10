@@ -127,8 +127,6 @@ def converter_afn_afd(alfabeto, inicio_afd, estados_finais, afn):
     transicoes_afd = defaultdict(lambda: defaultdict(set))
     finais_afd = set()
 
-    print(f"\n>> Estado inicial do AFD: {set(inicio_afd)}\n")
-
     idx = 0
     # Para cada estado do AFD 
     while idx < len(estados_afd):
