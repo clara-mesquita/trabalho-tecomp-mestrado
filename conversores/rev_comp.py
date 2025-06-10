@@ -30,9 +30,12 @@ def ler_afd(caminho_arquivo):
     estado_inicial = frozenset()
     estados_finais = set()
 
+    # ignora comentários e linhas vazias 
     with open(caminho_arquivo, 'r', encoding='utf-8') as f:
         linhas = [l.strip() for l in f if l.strip() and not l.startswith('#')]
 
+    # extrai conjunto de estados lendo todas as substrings do tipo {...}
+    # usando frozenset pq é hashable
     estados_raw = re.findall(r'\{[^{}]*\}', linhas[0])
     for s in estados_raw:
         estados.add(remover_caracteres_estado(s))
@@ -83,14 +86,19 @@ def verificar_cadeia_afn(cadeia, alfabeto, transicoes_afn, estados_iniciais, est
     """
     Simula um AFN (sem ε) sobre a cadeia.
     """
+    # conjunto atual com todos os estados inciiais
     atual = set(estados_iniciais)
     for c in cadeia:
+        # verifica se c pertence ao afabeto
         if c not in alfabeto:
             print(f"Símbolo inválido: '{c}'")
             return False
         prox = set()
         for q in atual:
+            # conjunto de destinos via transição_afn e faz a uniao dos destinos em prox
             prox |= transicoes_afn[q].get(c, set())
+        # Se não há nenhum estado possível (atual == ∅), significa que não há
+        # por onde continuar a simulação
         atual = prox
         if not atual:
             return False
@@ -105,9 +113,11 @@ def complemento_afd(estados, alfabeto, transicoes, estado_inicial, estados_finai
     """
     Gera um AFD que reconhece ~L. Trocando estados iniciais por não finais e vice-versa
     """
+    # estado morto para quando a transição de um estado com um símbolo não leva a lugar nenhum
     trap_state = frozenset({'TRAP'})
 
     # monta o novo conjunto de estados, incluindo o trap
+    # estados2 = estados ∪ {TRAP}
     estados2 = set(estados) | {trap_state}
 
     # constroi as novas transicoes garantindo completude
@@ -118,7 +128,7 @@ def complemento_afd(estados, alfabeto, transicoes, estado_inicial, estados_finai
                 # transição original (único destino)
                 dest = next(iter(transicoes[q][a]))
             else:
-                # transição indefinida → vai para trap_state
+                # transição indefinida vai para trap_state
                 dest = trap_state
             transicoes2[q][a].add(dest)
 
@@ -137,12 +147,12 @@ def verificar_cadeia_afd(transicoes, inicial, finais, cadeia):
     Simula uma cadeia w num DFA determinístico completo
     - Sempre há no máximo 1 estado corrente
     - Transições não definidas levam à rejeição imediata (trap state)
-
     """
     atual = inicial
     for c in cadeia:
         # símbolo fora do alfabeto ou sem transição definida: rejeita
         if c not in transicoes[atual]:
+            print(f"Símbolo inválido: '{c}'")
             return False
         destinos = transicoes[atual][c]
         # pega o único destino
